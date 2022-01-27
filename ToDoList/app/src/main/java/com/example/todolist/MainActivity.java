@@ -1,6 +1,8 @@
 package com.example.todolist;
 
 import org.apache.commons.io.FileUtils;
+
+import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
@@ -18,6 +20,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
+
+    public static final String KEY_ITEM_TEXT = "item_text";
+    public static final String KEY_ITEM_POSITION = "item_position";
+    public static final int EDIT_TEXT_CODE = 20;
+
     List<String> itemList;
     Button addButton;
     EditText etItem;
@@ -49,7 +56,22 @@ public class MainActivity extends AppCompatActivity {
             }
         };
 
-        itemsAdapter = new ItemsAdapter(itemList, onLongClickListener);
+        ItemsAdapter.OnClickListener clickListener = new ItemsAdapter.OnClickListener(){
+            @Override
+            public void onItemClicked(int position){
+                Log.d("MainActivity","Click Clock");
+
+                // Create new Activity
+                Intent i = new Intent(MainActivity.this,EditActivity.class);
+                // Pass Data Being Edited
+                i.putExtra(KEY_ITEM_TEXT, itemList.get(position));
+                i.putExtra(KEY_ITEM_POSITION, position);
+                // Display Edit Activity
+                startActivityForResult(i,EDIT_TEXT_CODE);
+            }
+        };
+
+        itemsAdapter = new ItemsAdapter(itemList, onLongClickListener, clickListener);
         rvItems.setAdapter(itemsAdapter);
         rvItems.setLayoutManager(new LinearLayoutManager(this));
 
@@ -69,6 +91,27 @@ public class MainActivity extends AppCompatActivity {
 
 
     }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if(resultCode == RESULT_OK && requestCode == EDIT_TEXT_CODE){
+            // Retrieve the updated text value
+            String itemText = data.getStringExtra(KEY_ITEM_TEXT);
+            // extract the original position of the edited item from the position key
+            int position = data.getExtras().getInt(KEY_ITEM_POSITION);
+            //update model at the right position with the new item text
+            itemList.set(position,itemText);
+            // notify adapter
+            itemsAdapter.notifyItemChanged(position);
+            //persist changes
+            saveItems();
+            Toast.makeText(getApplicationContext(), "item updated successfully", Toast.LENGTH_SHORT).show();
+        } else{
+            Log.w("MainActivity", "Unkjnown call to onActivityResult");
+        }
+    }
+
+
 
     private File getDataFile(){
         return new File(getFilesDir(), "data.txt");

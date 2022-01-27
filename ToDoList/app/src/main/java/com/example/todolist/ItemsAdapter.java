@@ -12,6 +12,9 @@ import java.util.List;
 // Used to display the data from the model to a row in the recycler view
 public class ItemsAdapter extends RecyclerView.Adapter<ItemsAdapter.ViewHolder>{
 
+    public interface OnClickListener{
+        void onItemClicked(int position);
+    }
 
     public interface OnLongClickListener{
         void onItemLongClicked(int position);
@@ -19,10 +22,12 @@ public class ItemsAdapter extends RecyclerView.Adapter<ItemsAdapter.ViewHolder>{
 
     List<String> items;
     OnLongClickListener longClickListener;
+    OnClickListener onClickListener;
 
-    public ItemsAdapter(List<String> items, OnLongClickListener onLongClickListener) {
+    public ItemsAdapter(List<String> items, OnLongClickListener onLongClickListener, OnClickListener clickListener) {
         this.items = items;
         this.longClickListener = onLongClickListener;
+        this.onClickListener = clickListener;
     }
 
     @NonNull
@@ -62,6 +67,12 @@ public class ItemsAdapter extends RecyclerView.Adapter<ItemsAdapter.ViewHolder>{
         // update the view inside of the view holder with this data
         public void bind(String item) {
             tvItem.setText(item);
+            tvItem.setOnClickListener(new View.OnClickListener(){
+                @Override
+                public void onClick(View v){
+                    onClickListener.onItemClicked(getAdapterPosition());
+                }
+            });
             tvItem.setOnLongClickListener(new View.OnLongClickListener(){
                 @Override
                 public boolean onLongClick(View v){
